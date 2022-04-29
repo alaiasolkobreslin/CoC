@@ -1,0 +1,3 @@
+open uwu
+type reco = {x : int}
+type wtf =  Owo of string | Uwu of int | Awa end

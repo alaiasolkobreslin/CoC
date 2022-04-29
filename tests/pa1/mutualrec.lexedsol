@@ -1,0 +1,20 @@
+1:1 let
+1:5 rec
+1:9 id non_terminate
+1:23 id x
+1:25 =
+1:27 id really_non_terminate
+1:48 id x
+2:1 and
+2:5 id really_non_terminate
+2:26 id x
+2:28 =
+2:30 id non_terminate
+2:44 id x
+3:1 and
+3:5 id ah_fuck_we_stuck
+3:22 =
+3:24 id non_terminate
+3:38 integer 2
+3:40 in
+4:1 id ah_fuck_we_stuck

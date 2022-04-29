@@ -1,0 +1,29 @@
+opam-version: "2.0"
+version: "0.0.1"
+synopsis: "Hazel: A language with dependent types"
+maintainer: "ajs644@cornell.edu"
+authors: [
+  "Alaia Solko Breslin <ajs644@cornell.edu>"
+  "Chris Lam <cl2424@cornell.edu>"]
+homepage: "https://github.com/alaiasolkobreslin/Hazel"
+dev-repo: "git+https://github.com/alaiasolkobreslin/Hazel"
+bug-reports: "https://github.com/alaiasolkobreslin/Hazel"
+license: "Apache2"
+build: [
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+  ["dune" "build" "@doc" "-p" name "-j" jobs] {with-doc}
+]
+depends: [
+  "ocaml" {>= "4.09.0"}
+  "alcotest"
+  "dune" {>= "1.4"}
+  "core" {>= "0.13.0"}
+  "ppx_deriving_yojson"
+  "ppx_jane" {>= "0.13.0" }
+  "ppx_js_style" {>= "0.13.0" }
+  "yojson" {>= "1.7.0"}
+  "nice_parser"
+  "menhir" {build & >= "20190626"}
+]

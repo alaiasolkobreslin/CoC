@@ -1,0 +1,5 @@
+(() () 
+  (let id = (lambda (x) x) in 
+    (let pairing = (lambda (x) (x x)) in 
+      (let listing = (lambda (x) (:: x [])) in
+        listing (pairing (id true))))))

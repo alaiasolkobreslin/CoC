@@ -1,0 +1,30 @@
+*.zip
+
+# OCaml
+*.cmo
+*.cma
+*.cmi
+*.out
+*.cmx
+*.native
+*.byte
+_build
+
+# Assembly
+*.s
+*.o
+
+# temporary files
+*.swp
+*~
+\#*\#
+.DS_Store
+
+# other
+hazelc
+*.lexed
+*.parsed
+*.typed
+*.ir
+
+runtime

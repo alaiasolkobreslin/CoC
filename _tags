@@ -1,0 +1,3 @@
+true: package(unix), package(z3)
+<tests/*>: package(oUnit)
+true: use_menhir, explain

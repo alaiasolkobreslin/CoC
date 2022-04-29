@@ -1,0 +1,4 @@
+(executables
+ (public_names hazel)
+ (names main)
+ (libraries hazel))

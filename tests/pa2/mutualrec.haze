@@ -1,0 +1,4 @@
+let rec non_terminate x = really_non_terminate x
+and really_non_terminate x = non_terminate x
+and ah_fuck_we_stuck = non_terminate 2 in
+ah_fuck_we_stuck

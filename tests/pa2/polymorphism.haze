@@ -1,0 +1,4 @@
+let id x = x in
+let pairing x = (x, x) in
+let listing x = [x] in 
+listing (pairing (id true))

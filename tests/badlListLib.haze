@@ -1,0 +1,32 @@
+let rec rev_helper acc lst = 
+match lst with
+|h::t -> rev_helper (h::acc) t
+|_    -> acc
+in
+
+let reverse lst = 
+rev_helper [] lst
+in
+
+let rec insert_sorted_helper acc x lst done = 
+match lst with
+|h::t when (x <= h) && (not done) -> insert_sorted_helper (h::x::acc) x t true
+|h::t                             -> insert_sorted_helper (h::acc) x t done
+|_                                -> reverse acc
+in
+
+let insert_sorted x lst = 
+insert_sorted_helper [] x lst false
+in
+
+let rec sort_helper acc lst = 
+match lst with
+|h::t -> sort_helper (insert_sorted h acc) t
+|_    -> acc
+in
+
+let sort lst =
+sort_helper [] lst
+in
+
+()

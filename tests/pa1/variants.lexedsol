@@ -1,0 +1,23 @@
+1:1 open
+1:6 id uwu
+2:1 type
+2:6 id reco
+2:11 =
+2:13 {
+2:14 id x
+2:16 :
+2:18 int
+2:21 }
+3:1 type
+3:6 id wtf
+3:10 =
+3:13 constructor Owo
+3:17 of
+3:20 string
+3:27 |
+3:29 constructor Uwu
+3:33 of
+3:36 int
+3:40 |
+3:42 constructor Awa
+3:46 end

@@ -4,6 +4,7 @@ open Hazel.Lexer
 open Hazel.Parser
 open Hazel.Ast
 open Hazel.Sexpr
+(* open Hazel.Type *)
 
 let report_lex_error file_name out_channel pos message =
   let l_num = pos.pos_lnum |> string_of_int in
@@ -34,13 +35,12 @@ let lex_channel write_out in_channel out_channel file_name =
   | Parsing.Parse_error -> failwith "unimplemented"
 
 let parse_channel write_out in_channel out_channel file_name = 
-  print_endline "here here";
   try
     let lexbuf = from_channel in_channel in
     let fmt = Format.formatter_of_out_channel out_channel in
     if write_out then
       begin
-        let ast = prog token lexbuf in
+        let ast = startprog token lexbuf in
         ast
         |> prog_to_sexpr
         |> pp_print_sexpr fmt;
@@ -48,7 +48,7 @@ let parse_channel write_out in_channel out_channel file_name =
         Format.pp_print_flush fmt ();
         Some ast
       end
-    else Some (prog token lexbuf)
+    else Some (startprog token lexbuf)
   with
   | LexingError (p, msg) ->
     report_lex_error file_name out_channel p msg; None

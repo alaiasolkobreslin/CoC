@@ -16,12 +16,10 @@ and theorem =
   proof: t;
 }
 
-and stmnt = 
-| Let of id * t
-| Theorem of theorem
+and prog = 
+| Let of id * t * prog
+| Theorem of theorem * prog
 | Expr of t
-
-type prog = stmnt list
 
 let rec t_to_sexpr = function
 | Id id -> SNode id
@@ -31,12 +29,10 @@ let rec t_to_sexpr = function
 | Type -> SNode "Type"
 
 and theorem_to_sexpr theorem = 
-  SList [SNode "Theorem"; SNode theorem.id; t_to_sexpr theorem.theorem; 
+  SList [SNode theorem.id; t_to_sexpr theorem.theorem; 
     SNode "Proof"; t_to_sexpr theorem.proof]
 
-and stmnt_to_sexpr = function 
-| Let (id, t) -> SList [SNode "Let"; SNode id; t_to_sexpr t]
-| Theorem theorem -> theorem_to_sexpr theorem
+and prog_to_sexpr = function 
+| Let (id, t, p) -> SList [SNode "Let"; SNode id; t_to_sexpr t; prog_to_sexpr p]
+| Theorem (theorem, p) -> SList[SNode "Theorem"; theorem_to_sexpr theorem; prog_to_sexpr p]
 | Expr t -> t_to_sexpr t
-
-let prog_to_sexpr prog = SList (List.map stmnt_to_sexpr prog)

@@ -34,8 +34,8 @@
 %start lexer
 %type <string option> lexer
 
-%start prog
-%type <Ast.prog> prog
+%start startprog
+%type <Ast.prog> startprog
 %%
 
 lexer:
@@ -78,15 +78,15 @@ token:
     { get_return_value $startpos "forall" }
 ;
 
-prog:
-  | e=list(stmnt); EOF                           { e }
+startprog:
+  | p = prog; EOF                           { p }
 ;
 
-stmnt:
-  | LET i=ID EQ t=term option(IN)                { Let (i, t) }
-  | THEOREM PERIOD i=ID COLON 
+prog:
+  | LET i=ID EQ t=term IN p = prog               { Let (i, t, p) }
+  | THEOREM PERIOD i=ID COLON
     t1=term PERIOD PROOF PERIOD 
-    t2=term PERIOD                               { Theorem {id=i; theorem=t1; proof=t2} }
+    t2=term PERIOD p=prog                        { Theorem ({id=i; theorem=t1; proof=t2}, p) }
   | t=term                                       { Expr t }
 
 term:

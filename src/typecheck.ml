@@ -2,6 +2,7 @@ open Ast
 open Util
 
 exception MalformedType
+exception InvalidProof
 
 type env = (id * t) list
 

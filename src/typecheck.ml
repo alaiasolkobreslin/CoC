@@ -1,6 +1,8 @@
 open Ast
 open Util
 
+exception MalformedType
+
 type env = (id * t) list
 
 (* get a fresh type variable *)
@@ -48,7 +50,7 @@ let rec typecheck_t gamma t =
     begin 
     match typecheck_t gamma (Forall (x, a, t_type)) with
     |Type -> (Forall (x, a, t_type))
-    |_ -> failwith "malformed type"
+    |_ -> raise MalformedType
     end
   |App (t1, t2) -> 
     begin
@@ -56,8 +58,8 @@ let rec typecheck_t gamma t =
     |Forall (x, a, b) -> 
       let t2_type = typecheck_t gamma t2 in 
        if t2_type = a then subst_t x b t2 
-       else failwith "malformed type"
-    |_ -> failwith "malformed type"
+       else raise MalformedType
+    |_ -> raise MalformedType
     end
   |Forall (x, a, b) -> 
     begin 
@@ -67,20 +69,21 @@ let rec typecheck_t gamma t =
       begin
         match typecheck_t gamma' b with
         |Type -> Type
-        |_ -> failwith "malformed type"
+        |_ -> raise MalformedType
       end
-    |_ -> failwith "malformed type"
+    |_ -> raise MalformedType
     end
   |Type -> Type
 
 (* let *)
 
 let rec typecheck_let gamma id t p =
-  (* let typecheck_t  *)
-  failwith ""
+  let t' = typecheck_t gamma t in
+  let p_subst = subst_prog id p t' in 
+  typecheck_prog gamma p_subst
 
 and typecheck_prog gamma prog =
   match prog with 
   | Let (id, t, p) -> typecheck_let gamma id t p
   | Theorem (theorem, p) -> failwith "unimplemented"
-  | Expr t -> failwith "unimplemented"
+  | Expr t -> typecheck_t gamma t

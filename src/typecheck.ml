@@ -10,12 +10,9 @@ type env = (id * t) list
   let source = Fresh.make (HashSet.make()) in
   fun() -> Id (Fresh.next source) *)
 
-(* type t = 
-  | Id of id
-  | Fun of id * t * t
-  | App of t * t
-  | Forall of id * t * t
-  | Type *)
+
+(** [subst_t var term sub] substitutes all instances of [var] in [term] with 
+    [sub] and returns the resulting term *)
 let rec subst_t var term sub = 
   match term with
   | Id x when x = var -> sub
@@ -27,6 +24,8 @@ let rec subst_t var term sub =
   | Forall (x, a, t) -> Forall (x, (subst_t var a sub), (subst_t var t sub))
   | Type -> Type
 
+(** [subst_prog var prog sub] substitutes all instances of [var] in [prog]
+    with [sub] and returns the resulting program *)
 let rec subst_prog var prog sub =
   match prog with 
   | Let (id, t, p) -> Let(id, subst_t var t sub, subst_prog var p sub)
@@ -41,6 +40,8 @@ let rec subst_prog var prog sub =
       end
   | Expr t -> Expr (subst_t var t sub)
 
+(** [typecheck_t gamma t] typechecks term [t] under context [gamma] and 
+    returns the result *)
 let rec typecheck_t gamma t =
   match t with
   |Id x -> List.assoc x gamma
@@ -75,15 +76,19 @@ let rec typecheck_t gamma t =
     end
   |Type -> Type
 
-(* let *)
-
+(** [typecheck_let gamma id t p] typechecks [t] and then substitues it for [id]
+    in program [p] and returns the resulting program *)
 let rec typecheck_let gamma id t p =
   let t' = typecheck_t gamma t in
   let p_subst = subst_prog id p t' in 
   typecheck_prog gamma p_subst
 
+and typecheck_theorem gamma theorem p =
+  failwith "unimplemented"
+
+(** [typecheck_prog gamma prog] typechecks [prog] and returns the result *)
 and typecheck_prog gamma prog =
   match prog with 
   | Let (id, t, p) -> typecheck_let gamma id t p
-  | Theorem (theorem, p) -> failwith "unimplemented"
+  | Theorem (theorem, p) -> typecheck_theorem gamma theorem p
   | Expr t -> typecheck_t gamma t

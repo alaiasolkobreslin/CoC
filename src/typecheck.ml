@@ -2,7 +2,7 @@ open Ast
 open Util
 
 exception MalformedType
-exception InvalidProof
+exception InvalidApplication
 
 type env = (id * t) list
 
@@ -93,3 +93,25 @@ and typecheck_prog gamma prog =
   | Let (id, t, p) -> typecheck_let gamma id t p
   | Theorem (theorem, p) -> typecheck_theorem gamma theorem p
   | Expr t -> typecheck_t gamma t
+
+let rec beta_reduce t1 t2 =
+  match t1 with 
+  | Fun (id, l, r)
+  | Forall (id, l, r) -> failwith "unimplemented"
+  | _ -> raise InvalidApplication
+
+let rec alpha_equiv t1 t2 =
+  match (t1, t2) with 
+  | (Type, Type) -> true
+  | (Id id1, Id id2) -> id1 = id2
+  | (Fun (id1, l1, r1), Fun (id2, l2, r2))
+  | (Forall (id1, l1, r1), Forall (id2, l2, r2)) -> 
+      if fv r2 |> List.exists (fun e -> e = id1) then false 
+      else
+        let r2' = subst_t id2 r2 (Id id1) in
+      (alpha_equiv l1 l2) && (alpha_equiv r1 r2')
+  | (App (l1, r1), App (l2, r2)) ->
+      (* Taking another look at the definition of alpha equivalence,
+         I think we might not want to beta reduce, although I'm not entirely sure *)
+      (alpha_equiv l1 l2) && (alpha_equiv r1 r2)
+  | _ -> failwith "unimplemented"

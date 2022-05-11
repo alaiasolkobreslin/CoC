@@ -114,13 +114,18 @@ let rec alpha_equiv gamma t1 t2 =
   | (Id id1, Id id2) -> lookup gamma id1 = lookup gamma id2
   | (Fun (id1, l1, r1), Fun (id2, l2, r2))
   | (Forall (id1, l1, r1), Forall (id2, l2, r2)) ->
-      if fv r2 |> List.exists (fun e -> e = id1) then false 
-      else
+      if not (fv r2 |> List.exists (fun e -> e = id1)) then 
+      begin
         let r2' = subst_t id2 r2 (Id id1) in
         let gamma' = ins_env gamma id1 l1 in
-        (alpha_equiv gamma' l1 l2) && (alpha_equiv gamma' r1 r2')
+        (alpha_equiv gamma l1 l2) && (alpha_equiv gamma' r1 r2')
+      end else
+      if not (fv r1 |> List.exists (fun e -> e = id2)) then
+      begin
+        let r1' = subst_t id1 r1 (Id id2) in
+        let gamma' = ins_env gamma id2 l2 in
+        (alpha_equiv gamma l1 l2) && (alpha_equiv gamma' r1' r2)
+      end else false
   | (App (l1, r1), App (l2, r2)) ->
-      (* Taking another look at the definition of alpha equivalence,
-         I think we might not want to beta reduce, although I'm not entirely sure *)
       (alpha_equiv gamma l1 l2) && (alpha_equiv gamma r1 r2)
   | _ -> false

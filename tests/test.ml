@@ -34,6 +34,12 @@ let alpha_equiv_tests = [
       (App (Id "x", Id "a")) (App (Id "x", Id "b")) true;
     make_alpha_equiv_test "id is in the free variables"
       [("x", Type)] (Forall ("y", Type, Id "x")) (Forall ("x", Type, Id "x")) true;
+    make_alpha_equiv_test "id in free variables, not alpha equiv"
+      [("x", Fun ("a", Type, Type))] (Forall ("y", Type, Id "x")) 
+      (Forall ("x", Type, Id "x")) false;
+    make_alpha_equiv_test "id in free variables, not alpha equiv (swapped)"
+      [("x", Fun ("a", Type, Type))] (Forall ("x", Type, Id "x"))
+      (Forall ("y", Type, Id "x")) false;
 ]
 
 let suite = "test suite for Hazel" >::: List.flatten [alpha_equiv_tests]

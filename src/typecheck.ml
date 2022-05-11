@@ -26,6 +26,7 @@ let rec subst_t var term sub =
   match term with
   | Id x when x = var -> sub
   | Id x -> term
+  (* In the true case, should we still substitute in a? *)
   | Fun (x, a, t) -> if x = var then term else
     Fun (x, (subst_t var a sub), (subst_t var t sub))
   | App (t1, t2) -> App ((subst_t var t1 sub), (subst_t var t2 sub))
@@ -102,12 +103,8 @@ and typecheck_prog gamma prog =
   | Theorem (theorem, p) -> typecheck_theorem gamma theorem p
   | Expr t -> typecheck_t gamma t
 
-let rec beta_reduce t1 t2 =
-  match t1 with 
-  | Fun (id, l, r)
-  | Forall (id, l, r) -> failwith "unimplemented"
-  | _ -> raise InvalidApplication
-
+(** [alpha_equiv gamma t1 t2] returns true if [t1] and [t2] are alpha 
+    equivalent and false otherwise *)
 let rec alpha_equiv gamma t1 t2 =
   match (t1, t2) with 
   | (Type, Type) -> true
@@ -129,3 +126,20 @@ let rec alpha_equiv gamma t1 t2 =
   | (App (l1, r1), App (l2, r2)) ->
       (alpha_equiv gamma l1 l2) && (alpha_equiv gamma r1 r2)
   | _ -> false
+
+(** [beta_reduce gamma t] performs beta reduction on [t] in the context gamma
+    and retuns the result *)
+let rec beta_reduce gamma t =
+  match t with
+  | Type -> Type
+  | Id id -> lookup gamma id
+  | App (Fun (id, tl1, tl2), tr)
+  | App (Forall (id, tl1, tl2) , tr) when alpha_equiv gamma tl1 tr ->
+      let tr' = beta_reduce gamma tr in
+      let tl1' = beta_reduce gamma tl1 in
+      let gamma' = ins_env gamma id tl1' in
+      let tl' = subst_t id tl2 tr' in
+      beta_reduce gamma' tl'
+  | Fun (id, l, r)
+  | Forall (id, l, r) -> t
+  | App _ -> raise InvalidApplication

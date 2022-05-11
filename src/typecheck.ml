@@ -3,8 +3,16 @@ open Util
 
 exception MalformedType
 exception InvalidApplication
+exception NotFound of string
 
 type env = (id * t) list
+
+let lookup gamma id =
+  match List.assoc_opt id gamma with 
+  | Some t -> t
+  | None -> raise (NotFound id)
+
+let ins_env gamma id t = (id, t)::(List.remove_assoc id gamma)
 
 (* get a fresh type variable *)
 (* let fresh : unit -> t =
@@ -45,9 +53,9 @@ let rec subst_prog var prog sub =
     returns the result *)
 let rec typecheck_t gamma t =
   match t with
-  |Id x -> List.assoc x gamma
+  |Id x -> lookup gamma x
   |Fun (x, a, t) -> 
-    let gamma' = (x, a)::(List.remove_assoc x gamma) in
+    let gamma' = ins_env gamma x a in
     let t_type = typecheck_t gamma' t in
     begin 
     match typecheck_t gamma (Forall (x, a, t_type)) with
@@ -67,7 +75,7 @@ let rec typecheck_t gamma t =
     begin 
     match typecheck_t gamma a with
     |Type -> 
-      let gamma' = (x, a)::(List.remove_assoc x gamma) in
+      let gamma' = ins_env gamma x a in
       begin
         match typecheck_t gamma' b with
         |Type -> Type
@@ -100,18 +108,19 @@ let rec beta_reduce t1 t2 =
   | Forall (id, l, r) -> failwith "unimplemented"
   | _ -> raise InvalidApplication
 
-let rec alpha_equiv t1 t2 =
+let rec alpha_equiv gamma t1 t2 =
   match (t1, t2) with 
   | (Type, Type) -> true
-  | (Id id1, Id id2) -> id1 = id2
+  | (Id id1, Id id2) -> lookup gamma id1 = lookup gamma id2
   | (Fun (id1, l1, r1), Fun (id2, l2, r2))
-  | (Forall (id1, l1, r1), Forall (id2, l2, r2)) -> 
+  | (Forall (id1, l1, r1), Forall (id2, l2, r2)) ->
       if fv r2 |> List.exists (fun e -> e = id1) then false 
       else
         let r2' = subst_t id2 r2 (Id id1) in
-      (alpha_equiv l1 l2) && (alpha_equiv r1 r2')
+        let gamma' = ins_env gamma id1 l1 in
+        (alpha_equiv gamma' l1 l2) && (alpha_equiv gamma' r1 r2')
   | (App (l1, r1), App (l2, r2)) ->
       (* Taking another look at the definition of alpha equivalence,
          I think we might not want to beta reduce, although I'm not entirely sure *)
-      (alpha_equiv l1 l2) && (alpha_equiv r1 r2)
-  | _ -> failwith "unimplemented"
+      (alpha_equiv gamma l1 l2) && (alpha_equiv gamma r1 r2)
+  | _ -> false

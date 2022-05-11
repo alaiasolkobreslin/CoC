@@ -1,7 +1,0 @@
-constraint even x = x mod 2 = 0
-type EvenNum = ENum of even
-type OddNum = ONum of (x : int -> not (even x))
-type Num = Owo of EvenNum | Uwu of OddNum end
-let initial = ENum 2 in
-match initial with
-|ENum n -> Num (ENum (n+2))

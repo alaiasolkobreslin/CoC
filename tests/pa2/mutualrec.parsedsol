@@ -1,5 +1,0 @@
-(() () 
-  (let rec non_terminate = (lambda (x) (really_non_terminate x) 
-    (and really_non_terminate = (lambda (x) (non_terminate x)) 
-      and aw_fuck_we_stuck = (non_terminate 2)) 
-    in ah_fuck_we_stuck))

@@ -1,6 +1,0 @@
-let add1 = lambda x -> x + 1 in
-let add2 y = y + 1 in
-let rec fact n = n * (fact (n - 1)) in
-let higherOrder f = lambda x -> f (f x) in
-let partiallyApplied = higherOrder fact in
-partiallyApplied 3

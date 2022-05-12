@@ -4,7 +4,7 @@ open Hazel.Lexer
 open Hazel.Parser
 open Hazel.Ast
 open Hazel.Sexpr
-(* open Hazel.Type *)
+open Hazel.Typecheck
 
 let report_lex_error file_name out_channel pos message =
   let l_num = pos.pos_lnum |> string_of_int in
@@ -54,6 +54,27 @@ let parse_channel write_out in_channel out_channel file_name =
     report_lex_error file_name out_channel p msg; None
   | Parsing.Parse_error -> failwith "unimplemented"
 
+let typecheck_channel write_out in_channel out_channel file_name = 
+  try
+    let lexbuf = from_channel in_channel in
+    let ast = startprog token lexbuf in 
+    let prog_type = typecheck_prog [] ast in
+    let fmt = Format.formatter_of_out_channel out_channel in
+    if write_out then
+      begin
+        prog_type
+        |> pp_t
+        |> Format.pp_print_string fmt;
+        Format.pp_force_newline fmt ();
+        Format.pp_print_flush fmt ();
+        Some prog_type
+      end
+    else Some prog_type
+  with
+  | LexingError (p, msg) ->
+    report_lex_error file_name out_channel p msg; None
+  | Parsing.Parse_error -> failwith "unimplemented"
+
 let chop_file file_name ext =
   print_endline file_name;
   if Filename.check_suffix file_name ".haze" then
@@ -86,6 +107,9 @@ let perform_commands commands files out_dir =
     |> ignore else
   if List.exists (fun c -> c = Parse) commands then
     List.map (fun f -> write_out_file parse_channel out_dir f ".parsed") files
+    |> ignore else
+  if List.exists (fun c -> c = Typecheck) commands then
+    List.map (fun f -> write_out_file typecheck_channel out_dir f ".typed") files
     |> ignore else ()
 
 let _ = match parse_command () with

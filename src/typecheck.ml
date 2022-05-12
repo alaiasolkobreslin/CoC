@@ -2,7 +2,7 @@ open Ast
 open Util
 
 exception MalformedType
-exception InvalidApplication
+exception InvalidApplication of string
 exception NotFound of string
 
 type env = (id * t) list
@@ -13,11 +13,6 @@ let lookup gamma id =
   | None -> raise (NotFound id)
 
 let ins_env gamma id t = (id, t)::(List.remove_assoc id gamma)
-
-(* get a fresh type variable *)
-(* let fresh : unit -> t =
-  let source = Fresh.make (HashSet.make()) in
-  fun() -> Id (Fresh.next source) *)
 
 
 (** [subst_t var term sub] substitutes all instances of [var] in [term] with 
@@ -86,23 +81,6 @@ let rec typecheck_t gamma t =
     end
   |Type -> Type
 
-(** [typecheck_let gamma id t p] typechecks [t] and then substitues it for [id]
-    in program [p] and returns the resulting program *)
-let rec typecheck_let gamma id t p =
-  let t' = typecheck_t gamma t in
-  let p_subst = subst_prog id p t' in 
-  typecheck_prog gamma p_subst
-
-and typecheck_theorem gamma theorem p =
-  failwith "unimplemented"
-
-(** [typecheck_prog gamma prog] typechecks [prog] and returns the result *)
-and typecheck_prog gamma prog =
-  match prog with 
-  | Let (id, t, p) -> typecheck_let gamma id t p
-  | Theorem (theorem, p) -> typecheck_theorem gamma theorem p
-  | Expr t -> typecheck_t gamma t
-
 (** [alpha_equiv gamma t1 t2] returns true if [t1] and [t2] are alpha 
     equivalent and false otherwise *)
 let rec alpha_equiv gamma t1 t2 =
@@ -127,8 +105,28 @@ let rec alpha_equiv gamma t1 t2 =
       (alpha_equiv gamma l1 l2) && (alpha_equiv gamma r1 r2)
   | _ -> false
 
+(** [typecheck_let gamma id t p] typechecks [t] and then substitues it for [id]
+    in program [p] and returns the resulting program *)
+let rec typecheck_let gamma id t p =
+  let t' = typecheck_t gamma t in
+  (* let gamma' = ins_env gamma id t' in *)
+  let p_subst = subst_prog id p t' in 
+  typecheck_prog gamma p_subst
+  (* typecheck_prog gamma p_subst *)
+
+and typecheck_theorem gamma theorem p =
+  failwith "unimplemented"
+
+(** [typecheck_prog gamma prog] typechecks [prog] and returns the result *)
+and typecheck_prog gamma prog =
+  match prog with 
+  | Let (id, t, p) -> typecheck_let gamma id t p
+  | Theorem (theorem, p) -> typecheck_theorem gamma theorem p
+  | Expr t -> typecheck_t gamma t
+
+
 (** [beta_reduce gamma t] performs beta reduction on [t] in the context gamma
-    and retuns the result *)
+  and retuns the result *)
 let rec beta_reduce gamma t =
   match t with
   | Type -> Type
@@ -143,7 +141,8 @@ let rec beta_reduce gamma t =
           let gamma' = ins_env gamma id tl1' in
           let tl' = subst_t id tl2 tr' in
           beta_reduce gamma' tl'
-      | _ -> raise InvalidApplication     
+      (* | _ -> raise (InvalidApplication (pp_t (beta_reduce gamma t1))) *)
+      | _ -> raise (InvalidApplication (pp_t tr'))
     end
   | Fun (id, l, r)
   | Forall (id, l, r) -> t

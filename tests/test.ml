@@ -1,7 +1,8 @@
 open OUnit2
 open Hazel.Ast
 open Hazel.Typecheck
-(* open Main *)
+
+let compare_t gamma t1 t2 = alpha_equiv gamma t1 t2
 
 let make_alpha_equiv_test
     (name : string)
@@ -11,6 +12,21 @@ let make_alpha_equiv_test
     (expected : bool) : test = 
   name >:: (fun _ ->
       assert_equal expected (alpha_equiv gamma t1 t2))
+
+let make_beta_reduce_equiv_test
+    (name : string)
+    (gamma : env)
+    (t1 : t)
+    (t2 : t) : test =
+  name >:: (fun _ ->
+      assert_equal (beta_reduce gamma t1) (beta_reduce gamma t2) ~printer:pp_t ~cmp:(compare_t gamma)) 
+
+let make_beta_reduce_raises_test
+    (name : string)
+    (gamma : env)
+    (t1 : t) : test =
+  name >:: (fun _ ->
+      assert_raises InvalidApplication (fun () -> beta_reduce gamma t1)) 
 
 let fun_1 = Fun ("x", Fun ("y", Type, Type), Fun ("z", Type, App (Id "x", Id "z")))
 (* Fun x:(Type -> Type) -> Fun z:Type -> (x z) *)
@@ -42,6 +58,24 @@ let alpha_equiv_tests = [
       (Forall ("y", Type, Id "x")) false;
 ]
 
-let suite = "test suite for Hazel" >::: List.flatten [alpha_equiv_tests]
+let beta_reduce_tests = [
+    make_beta_reduce_equiv_test "getting id from env"
+      [("x", Type)] (Id "x") Type;
+    make_beta_reduce_equiv_test "simple function application"
+      [] (App (Fun ("x", Type, Type), Type)) Type;
+    make_beta_reduce_equiv_test "simple forall application"
+      [] (App (Forall ("x", Type, Type), Type)) Type;
+    make_beta_reduce_equiv_test "different order of application"
+      [("x", Fun ("a", Type, Type)); ("y", Type)]
+      (App (App (fun_1, Id "x"), Id "y")) (App (App (fun_2, Id "y"), Id "x"));
+    make_beta_reduce_raises_test "too many applications"
+      [("x", Fun ("a", Type, Type)); ("y", Type)]
+      (App (App (App (fun_1, Id "x"), Id "y"), Type));
+]
+
+let suite = "test suite for Hazel" >::: List.flatten [
+  alpha_equiv_tests;
+  beta_reduce_tests;
+]
 
 let _ = run_test_tt_main suite

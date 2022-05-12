@@ -133,13 +133,17 @@ let rec beta_reduce gamma t =
   match t with
   | Type -> Type
   | Id id -> lookup gamma id
-  | App (Fun (id, tl1, tl2), tr)
-  | App (Forall (id, tl1, tl2) , tr) when alpha_equiv gamma tl1 tr ->
-      let tr' = beta_reduce gamma tr in
-      let tl1' = beta_reduce gamma tl1 in
-      let gamma' = ins_env gamma id tl1' in
-      let tl' = subst_t id tl2 tr' in
-      beta_reduce gamma' tl'
+  | App (t1, tr) ->
+    let tr' = beta_reduce gamma tr in
+    begin
+      match beta_reduce gamma t1 with
+      | Fun (id, tl1, tl2)
+      | Forall (id, tl1, tl2) when alpha_equiv gamma tl1 tr' ->
+          let tl1' = beta_reduce gamma tl1 in
+          let gamma' = ins_env gamma id tl1' in
+          let tl' = subst_t id tl2 tr' in
+          beta_reduce gamma' tl'
+      | _ -> raise InvalidApplication     
+    end
   | Fun (id, l, r)
   | Forall (id, l, r) -> t
-  | App _ -> raise InvalidApplication

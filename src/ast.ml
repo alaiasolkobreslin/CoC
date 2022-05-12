@@ -36,3 +36,10 @@ and prog_to_sexpr = function
 | Let (id, t, p) -> SList [SNode "Let"; SNode id; t_to_sexpr t; prog_to_sexpr p]
 | Theorem (theorem, p) -> SList[SNode "Theorem"; theorem_to_sexpr theorem; prog_to_sexpr p]
 | Expr t -> t_to_sexpr t
+
+let rec pp_t = function
+  | Id id -> id
+  | Fun (id, t1, t2) -> "(fun " ^ id ^ ":" ^ (pp_t t1) ^ " -> " ^ (pp_t t2) ^ ")"
+  | Forall (id, t1, t2) -> "(forall " ^ id ^ ":" ^ (pp_t t1) ^ " , " ^ (pp_t t2) ^ ")"
+  | App (t1, t2) -> "(" ^ (pp_t t1) ^ " " ^ (pp_t t2) ^ ")"
+  | Type -> "Type"

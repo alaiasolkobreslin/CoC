@@ -92,7 +92,7 @@ prog:
 term:
   | LEFT_PAREN t=term RIGHT_PAREN                { t }
   | i=ID                                         { Id i }
-  | FUN i=ID COLON t1=term ARROW t2=term            { Fun (i, t1, t2) }
+  | FUN i=ID COLON t1=term ARROW t2=term         { Fun (i, t1, t2) }
   | t1=term t2=term                              { App (t1, t2) }
   | FORALL i=ID COLON t1=term COMMA t2=term      { Forall (i, t1, t2) }
   | TYPE                                         { Type }

@@ -25,6 +25,7 @@ rule token = parse
 |";"              {SEMICOLON}
 |","              {COMMA}
 |"."              {PERIOD}
+|"="              {EQ}
 
 |"let"            {LET}
 |"in"             {IN}

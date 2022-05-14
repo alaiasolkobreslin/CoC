@@ -58,7 +58,7 @@ let typecheck_channel write_out in_channel out_channel file_name =
   try
     let lexbuf = from_channel in_channel in
     let ast = startprog token lexbuf in 
-    let prog_type = typecheck_prog [] ast in
+    let prog_type = typecheck_prog ast in
     let fmt = Format.formatter_of_out_channel out_channel in
     if write_out then
       begin

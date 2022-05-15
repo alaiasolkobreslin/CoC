@@ -67,6 +67,7 @@ let typecheck_channel write_out in_channel out_channel file_name =
         |> Format.pp_print_string fmt;
         Format.pp_force_newline fmt ();
         Format.pp_print_flush fmt ();
+        print_endline (pp_t prog_type);
         Some prog_type
       end
     else Some prog_type

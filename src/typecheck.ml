@@ -28,11 +28,11 @@ let rec lookup_context gamma id curr =
 (** [ins_context gamma id t] inserts [id] and [t] into [gamma] and returns
     the new context *)
 let rec ins_context gamma id t =
-  Forall (id, t, gamma)
-  (* match gamma with 
+  (* Forall (id, t, gamma) *)
+  match gamma with 
   | Type -> Forall (id, t, Type)
-  | Forall (id', t1, t2) -> Forall (id', t1, ins_context t id t2)
-  | _ -> raise (InvalidContext "invalid conext in ins_context") *)
+  | Forall (id', t1, t2) -> Forall (id', t1, ins_context t2 id t)
+  | _ -> raise (InvalidContext "invalid conext in ins_context")
   
 let rec chop_context_tail = function
   | Forall (id, t1, Type) -> Type
@@ -86,31 +86,17 @@ let rec subst_prog var prog sub =
 let rec alpha_equiv (env: (id*t) list) t1 t2 =
   match (t1, t2) with 
   | (Type, Type) -> true
-  | (Id id1, Id id2) -> 
-      begin
-        (* let left = lookup_context gamma id1 None in 
-        let right = lookup_context gamma id2 None in 
-        print_endline ("lookup gamma: " ^ (pp_t gamma));
-        print_endline ("id left: " ^ id1);
-        print_endline ("id right: " ^ id2);
-        print_endline ("lookup left: " ^ (pp_t left));
-        print_endline ("lookup right: " ^ (pp_t right)); *)
-        lookup env id1 = lookup env id2
-      end
+  | (Id id1, Id id2) -> lookup env id1 = lookup env id2
   | (Fun (id1, l1, r1), Fun (id2, l2, r2))
+  (* I don't think this is correct but it's the easiest way to get beta
+     reduction working *)
+  | (Fun (id1, l1, r1), Forall (id2, l2, r2))
+  | (Forall (id1, l1, r1), Fun (id2, l2, r2))
   | (Forall (id1, l1, r1), Forall (id2, l2, r2)) ->
       if not (fv r2 |> List.exists (fun e -> e = id1)) then 
       begin
-        (* r2' = Forall (y, Type, Id y) *)
         let r2' = subst_t id2 r2 (Id id1) in
-        (* gamma' = (Forall (y, Type, Forall (x, Type, Type))) *)
         let env' = ins_env env id1 l1 in
-        (* print_endline ("gamma: " ^ (pp_t gamma));
-        print_endline ("l1: " ^ (pp_t l1));
-        print_endline ("l2: " ^ (pp_t l2));
-        print_endline ("gamma': " ^ (pp_t gamma'));
-        print_endline ("r1: " ^ (pp_t r1));
-        print_endline ("r2': " ^ (pp_t r2')); *)
         (alpha_equiv env l1 l2) && (alpha_equiv env' r1 r2')
       end else
       if not (fv r1 |> List.exists (fun e -> e = id2)) then
@@ -125,38 +111,39 @@ let rec alpha_equiv (env: (id*t) list) t1 t2 =
 
 (** [beta_reduce gamma t] performs beta reduction on [t] in the context gamma
   and retuns the result *)
-  let rec beta_reduce (env: (id*t) list) t =
+  let rec beta_reduce gamma t =
     match t with
     | Type -> Type
-    | Id id -> lookup env id
+    | Id id -> lookup_context gamma id None
     | App (t1, tr) ->
-      let tr' = beta_reduce env tr in
+      let tr' = beta_reduce gamma tr in
       begin
-        match beta_reduce env t1 with
+        match beta_reduce gamma t1 with
         | Fun (id, tl1, tl2)
-        | Forall (id, tl1, tl2) when alpha_equiv env tl1 tr' ->
-            let tl1' = beta_reduce env tl1 in
-            let env' = ins_env env id tl1' in
+        | Forall (id, tl1, tl2) when alpha_equiv [] tl1 tr' ->
+            let tl1' = beta_reduce gamma tl1 in
+            let gamma' = ins_context gamma id tl1' in
             let tl' = subst_t id tl2 tr' in
-            beta_reduce env' tl'
-        | _ -> raise InvalidApplication
+            beta_reduce gamma' tl'
+        | e -> print_endline ("t1 beta reduced: " ^ (pp_t e)); raise InvalidApplication
       end
     | Fun (id, l, r)
-    | Forall (id, l, r) -> t
+    | Forall (id, l, r) -> Forall(id, l, r)
 
-(* TODO: implement me *)
 let rec typecheck_context gamma delta =
-  match (gamma, delta) with 
+  match (gamma, delta) with
+    (* valid context case 1 *)
   | (Type, Type) -> Type 
   | (Forall (id, t1, t2), Type) ->
-      (* TODO: check this first case *)
       begin
         let hd = chop_context_head gamma in
         let delta = snd hd in
-        let tail = chop_context_tail gamma in 
+        let tail = chop_context_tail gamma in
+        (* valid context case 2: gamma [x:delta] |- * *)
         if is_valid_context delta then typecheck_context tail delta else
+          (* valid context case 3: gamma [x:P] |- * *)
           begin
-            match typecheck_t delta with 
+            match typecheck_t_with_context tail delta with 
             | Type -> Type 
             | _ -> raise (InvalidContext "invalid context in typecheck_context")
           end
@@ -166,6 +153,7 @@ let rec typecheck_context gamma delta =
 
 and typecheck_t t =
   if is_valid_context t then (typecheck_context t Type |> ignore; t) else
+  (* if is_valid_context t then (typecheck_context t Type) else *)
     typecheck_t_with_context Type t
 
 (** [typecheck_t gamma t] typechecks term [t] under context [gamma] and 
@@ -188,26 +176,39 @@ and typecheck_fun gamma x a t =
     | Type -> (Forall (x, a, t_type))
     | e -> raise (MalformedType (pp_t e))
 
-and typecheck_app gamma t1 t2 = Type
-  (* let t1_t = typecheck_t_with_context gamma t1 in 
+and typecheck_app gamma t1 t2 =
+  let t1_t = if is_valid_context t1 then t1 else typecheck_t_with_context gamma t1 in 
   let t2_t = typecheck_t_with_context gamma t2 in
-  print_endline ("gamma: " ^ (pp_t gamma));
-  print_endline ("t1: " ^ (pp_t t1));
-  print_endline ("t2: " ^ (pp_t t2));
-  print_endline ("t1 type: " ^ (pp_t t1_t));
+  (* print_endline ("t1 type: " ^ (pp_t t1_t));
   print_endline ("t2 type: " ^ (pp_t t2_t));
-  print_endline ("t1 reduced: " ^ (beta_reduce gamma t1 |> pp_t));
+  print_endline ("t1 reduced: " ^ (beta_reduce gamma t1 |> pp_t)); *)
   (* match typecheck_t_with_context gamma t1 with *)
-  typecheck_t_with_context gamma t1 |> ignore;
-  let t1_reduced = beta_reduce gamma t1 in
-  match t1_reduced with
-  | Forall (x, a, b) -> 
+  match t1_t with
+  (* let t1_reduced = beta_reduce gamma t1 in *)
+  (* match t1_reduced with *)
+  | Forall (x, a, b) ->
     print_endline "here here";
-    let t2_type = typecheck_t_with_context gamma t2 in 
-      if alpha_equiv gamma t2_type a then subst_t x b t2 
-      else (print_endline "naur"; raise (MalformedType ((pp_t t1_reduced) ^ " and " ^ (pp_t t2_type))))
-  | e -> raise (MalformedType ((pp_t e) ^ " and " ^ (pp_t t2_t) )) *)
-
+      print_endline ("gamma: " ^ (pp_t gamma));
+      print_endline ("t1: " ^ (pp_t t1));
+      print_endline ("t2: " ^ (pp_t t2));
+      print_endline ("t1 typed: " ^ (pp_t t1_t));
+      print_endline ("t2 typed: " ^ (pp_t t2_t));
+      print_endline ("arg type : " ^ (pp_t a));
+      if alpha_equiv [] t2_t a then
+        begin 
+          print_endline "app success";
+          let fina = subst_t x b t2 in
+          print_endline ("final: " ^ (pp_t fina));
+          (* typecheck_t fina *)
+          fina
+        end
+      else (print_endline "naur 1"; raise (MalformedType ((pp_t t1_t) ^ " and " ^ (pp_t t2_t))))
+  | e -> begin 
+    print_endline "naur 2";
+    print_endline ("t1: " ^ (pp_t t1));
+    print_endline ("t2: " ^ (pp_t t2));
+    raise (MalformedType ("wasn't even a forall " ^ (pp_t t1_t) ^ " and " ^ (pp_t t2_t) ))
+  end
 and typecheck_forall gamma x a b =
   match typecheck_t_with_context gamma a with
   | Type -> 

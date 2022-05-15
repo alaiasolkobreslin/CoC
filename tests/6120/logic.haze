@@ -1,9 +1,14 @@
 
-let bool = forall x:Type, (forall y:Type, Type) in
+(*let bool = forall x:Type, (forall y:Type, Type) in*)
 let true = lambda x:Type -> (lambda y:Type -> x) in 
-let false = lambda x:Type -> (lambda y:Type -> y) in 
+(*let false = lambda x:Type -> (lambda y:Type -> y) in *)
 
-let if = lambda b:bool -> (lambda t:Type -> (lambda f:Type -> ((b t) f))) in
+(*let if = lambda b:bool -> (lambda t:Type -> (lambda f:Type -> ((b t) f))) in
 let and = lambda b1:bool -> (lambda b2:bool -> (((if b1) b2) false)) in
+let or = lambda b1:bool -> (lambda b2:bool -> (((if b1) true) b2)) in
+let not = lambda b1:bool -> (((if b1) false) true) in*)
+ 
+(*let test = ((and true) false) in *)
+(*(not true)*)
 
-true
+((true true) true)

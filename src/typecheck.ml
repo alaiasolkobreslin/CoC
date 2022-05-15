@@ -151,17 +151,17 @@ let rec typecheck_context gamma delta =
   | _, (Forall (id, t1, t2)) -> typecheck_context (ins_context gamma id t1) t2
   | _ -> raise (InvalidContext "invalid context in typecheck_context")
 
-and typecheck_t t =
+and typecheck_t t gamma_opt =
   if is_valid_context t then (typecheck_context t Type |> ignore; t) else
+    match gamma_opt with 
+    | None -> 
   (* if is_valid_context t then (typecheck_context t Type) else *)
     typecheck_t_with_context Type t
+    | Some gamma -> typecheck_t_with_context gamma t
 
 (** [typecheck_t gamma t] typechecks term [t] under context [gamma] and 
     returns the result *)
 and typecheck_t_with_context gamma t =
-  (* print_endline "in typecheck_t_with_context";
-  print_endline ("gamma: " ^ (pp_t gamma));
-  print_endline ("t: " ^ (pp_t t)); *)
   match t with
   | Id x -> lookup_context gamma x None
   | Fun (x, a, t) -> typecheck_fun gamma x a t
@@ -177,8 +177,10 @@ and typecheck_fun gamma x a t =
     | e -> raise (MalformedType (pp_t e))
 
 and typecheck_app gamma t1 t2 =
-  let t1_t = if is_valid_context t1 then t1 else typecheck_t_with_context gamma t1 in 
-  let t2_t = typecheck_t_with_context gamma t2 in
+  (* let t1_t = if is_valid_context t1 then t1 else typecheck_t_with_context gamma t1 in  *)
+  let t1_t = typecheck_t t1 (Some gamma) in
+  (* let t2_t = if is_valid_context t2 then t2 else typecheck_t_with_context gamma t2 in *)
+  let t2_t = typecheck_t t2 (Some gamma) in
   (* print_endline ("t1 type: " ^ (pp_t t1_t));
   print_endline ("t2 type: " ^ (pp_t t2_t));
   print_endline ("t1 reduced: " ^ (beta_reduce gamma t1 |> pp_t)); *)
@@ -194,7 +196,7 @@ and typecheck_app gamma t1 t2 =
       print_endline ("t1 typed: " ^ (pp_t t1_t));
       print_endline ("t2 typed: " ^ (pp_t t2_t));
       print_endline ("arg type : " ^ (pp_t a));
-      if alpha_equiv [] t2_t a then
+      if a = Type || alpha_equiv [] t2_t a then
         begin 
           print_endline "app success";
           let fina = subst_t x b t2 in
@@ -202,7 +204,7 @@ and typecheck_app gamma t1 t2 =
           (* typecheck_t fina *)
           fina
         end
-      else (print_endline "naur 1"; raise (MalformedType ((pp_t t1_t) ^ " and " ^ (pp_t t2_t))))
+      else (print_endline "naur 1"; raise (MalformedType ((pp_t a) ^ " and " ^ (pp_t t2_t))))
   | e -> begin 
     print_endline "naur 2";
     print_endline ("t1: " ^ (pp_t t1));
@@ -223,7 +225,7 @@ and typecheck_forall gamma x a b =
 (** [typecheck_let id t p] typechecks [t] and then substitues it for [id]
     in program [p] and returns the resulting program *)
 let rec typecheck_let id t p =
-  let t' = typecheck_t t in
+  let t' = typecheck_t t None in
   let p_subst = subst_prog id p t' in 
   typecheck_prog p_subst
 
@@ -235,4 +237,4 @@ and typecheck_prog prog =
   match prog with 
   | Let (id, t, p) -> typecheck_let id t p
   | Theorem (theorem, p) -> typecheck_theorem theorem p
-  | Expr t -> typecheck_t t
+  | Expr t -> typecheck_t t None

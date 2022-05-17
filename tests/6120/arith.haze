@@ -1,0 +1,34 @@
+
+(* Natural numbers *)
+let Nat = forall N:Type, (forall _:N, (forall _:(forall _:N, N), N)) in
+
+(* Some numbers *)
+let zero = lambda N:Type -> (lambda x:N -> (lambda _:(forall _:N, N) -> x)) in
+let one = lambda N:Type -> (lambda x:N -> (lambda f:(forall _:N, N) -> (f x))) in
+let two = lambda N:Type -> (lambda x:N -> (lambda f:(forall _:N, N) -> (f (f x)))) in
+
+(* Some arithmetic functions *)
+let succ = lambda nat:Nat -> (lambda N:Type -> (lambda x:N -> 
+  (lambda f:(forall _:N, N) -> (f (((nat N) x) f))))) in
+let add = lambda n1:Nat -> (lambda n2:Nat -> (lambda N:Type -> (lambda x:N ->
+  (lambda f:(forall _:N, N) ->  (((n1 N) (((n2 N) x) f)) f))))) in
+(*let mul = lambda n1:Nat -> (lambda n2:Nat -> (lambda N:Type -> (lambda x:N ->
+  (lambda f:(forall _:N, N) -> (((n1 Nat) zero) (fun m:Nat -> (((((add n2) m) N) x) f))))))) in *)
+(*let mul = lambda n1:Nat -> (lambda n2:Nat -> (lambda N:Type -> (lambda x:N ->
+  (lambda f:(forall _:N, N) -> (((n1 Nat) zero) (add n2)))))) in*)
+(*let mul = lambda n1:Nat -> (lambda n2:Nat -> (lambda N:Type -> (lambda x:N ->
+  (lambda f:(forall _:N, N) -> (((n1 Nat) zero) (lambda m:Nat -> (((((add n2) m) Nat) x) f))))))) in*)
+
+Theorem zero_is_nat: Nat. Proof. zero.
+Theorem one_is_nat: Nat. Proof. one.
+Theorem two_is_nat: Nat. Proof. two.
+
+Theorem succ_zero_is_nat: Nat. Proof. (succ zero).
+
+
+let two_new = (succ (succ zero)) in 
+
+(*((add one) two)*)
+(* (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f (f (f x)))))) *)
+
+((mul two) one)

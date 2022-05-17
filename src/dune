@@ -12,4 +12,4 @@
 (library
  (name hazel)
  (public_name hazel)
- (libraries yojson nice_parser core_kernel z3))
+ (libraries yojson nice_parser core_kernel))

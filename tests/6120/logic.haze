@@ -1,14 +1,34 @@
 
-(*let bool = forall x:Type, (forall y:Type, Type) in*)
-let true = lambda x:Type -> (lambda y:Type -> x) in 
-(*let false = lambda x:Type -> (lambda y:Type -> y) in *)
+(* Defining true and false propositions *)
+let True = forall I:Type, forall i:I, i in 
+let False = forall I:Type, I in
 
-(*let if = lambda b:bool -> (lambda t:Type -> (lambda f:Type -> ((b t) f))) in
-let and = lambda b1:bool -> (lambda b2:bool -> (((if b1) b2) false)) in
-let or = lambda b1:bool -> (lambda b2:bool -> (((if b1) true) b2)) in
-let not = lambda b1:bool -> (((if b1) false) true) in*)
- 
-(*let test = ((and true) false) in *)
-(*(not true)*)
 
-((true true) true)
+
+(* Logical conjunction *)
+let conj = lambda P:Type -> lambda Q:Type -> forall x:Type, forall _:(forall _:P, forall _:Q, x), x in
+
+(* P -> P *)
+Theorem p_implies_p: forall P:Type, forall _:P, P.
+Proof. lambda P:Type -> lambda x:P -> x.
+
+(* P -> Q -> P *)
+Theorem p_implies_q_implies_p: forall P:Type, forall Q:Type, forall _:P, forall _:Q, P.
+Proof. lambda P:Type -> lambda Q:Type -> lambda x:P -> lambda _:Q -> x.
+
+(* P -> P /\ P *)
+Theorem p_implies_conj: forall P:Type, forall _:P, ((conj P) P).
+Proof. lambda P:Type -> lambda x:P -> 
+
+(* P /\ Q -> P *)
+Theorem conj_implies_fst: forall P:Type, forall Q:Type, forall _:((conj P) Q), P.
+Proof. lambda P:Type -> lambda Q:Type -> lambda  p:((conj P) Q) -> ((p P) (lambda x:P -> lambda _:Q -> x)).
+
+(* P /\ Q -> Q *)
+Theorem cong_implies_snd: forall P:Type, forall Q:Type, forall _:((conj P) Q), Q.
+Proof. lambda P:Type -> lambda Q:Type -> lambda  p:((conj P) Q) -> ((p Q) (lambda _:P -> lambda x:Q -> x)).
+
+(*Theorem p_implies_q_implies_conj: forall P:Type, forall Q:Type, forall p:P, forall q:Q, ((conj P) Q).
+Proof. lambda P:Type -> lambda Q:Type -> lambda _:P -> lambda _:Q -> ((conj P) Q).*)
+
+True

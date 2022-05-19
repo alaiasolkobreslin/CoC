@@ -26,9 +26,9 @@ Theorem two_is_nat: Nat. Proof. two.
 Theorem succ_zero_is_nat: Nat. Proof. (succ zero).
 
 
-let two_new = (succ (succ zero)) in 
+(succ (succ zero))
 
-(*((add one) two)*)
+
 (* (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f (f (f x)))))) *)
 
-((mul two) one)
+(* ((mul two) one)*)

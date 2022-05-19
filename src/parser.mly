@@ -84,7 +84,7 @@ startprog:
 
 prog:
   | LET i=ID EQ t=term IN p = prog               { Let (i, t, p) }
-  | THEOREM PERIOD i=ID COLON
+  | THEOREM i=ID COLON
     t1=term PERIOD PROOF PERIOD 
     t2=term PERIOD p=prog                        { Theorem ({id=i; theorem=t1; proof=t2}, p) }
   | t=term                                       { Expr t }

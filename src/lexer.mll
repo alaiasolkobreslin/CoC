@@ -8,7 +8,7 @@
 
 let new_line = '\n' | '\r''\n'
 
-let var = ['a'-'z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' ''' '_']*
+let var = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' ''' '_']*
 let str = ['"'] [^'"']* ['"']
 let whitespace = [' ' '\t']
 

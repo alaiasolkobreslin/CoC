@@ -2,7 +2,7 @@ open Ast
 open Util
 
 exception MalformedType of string
-exception InvalidApplication
+exception InvalidApplication of string
 exception InvalidContext of string
 exception NotFound of string
 
@@ -112,35 +112,41 @@ let rec alpha_equiv (env: (id*id) list) t1 t2 =
       (alpha_equiv env l1 l2) && (alpha_equiv env r1 r2)
   | _ -> false
 
-(** [beta_reduce gamma t] performs beta reduction on [t] in the context [gamma]
-and retuns the result *)
+(** [beta_reduce gamma t] performs beta reduction on [t] in the context gamma
+    and retuns the result *)
 let rec beta_reduce gamma t =
   match t with
-  | Type
+  | Type -> Type
   | Id _ -> t
-  | App (t1, tr) ->
-    let tr' = typecheck_non_context gamma tr in
-    begin
-      match beta_reduce gamma t1 with
-      | Fun (id, tl1, tl2) when alpha_equiv [] tl1 tr' ->
-          let tl' = subst_t id tl2 tr in
-          beta_reduce gamma tl'
-      | _ -> raise InvalidApplication
+  | App (Fun (id, l, r), t2) ->
+    begin       
+      let t2' = typecheck_non_context gamma t2 in
+      if alpha_equiv [] l t2' then
+        begin 
+          let t' = subst_t id r t2 in 
+          if alpha_equiv [] t' t then t' else beta_reduce gamma t'
+        end
+      else raise (InvalidApplication "invalid application in beta reduce")
     end
+  | App (t1, tr) ->
+    let t' = App (beta_reduce gamma t1, beta_reduce gamma tr) in 
+    if alpha_equiv [] t' t then t' else beta_reduce gamma t'
   | Fun (id, l, r) ->
-    begin
+    begin 
       let gamma' = ins_context gamma id l in 
       let l' = beta_reduce gamma l in 
       let r' = beta_reduce gamma' r in
       typecheck_non_context gamma' r |> ignore;
-      Fun (id, l', r')
+      let t' = Fun (id, l', r') in 
+      if alpha_equiv [] t' t then t' else beta_reduce gamma t'
     end
   | Forall (id, l, r) ->
     begin 
       let gamma' = ins_context gamma id l in
       let l' = beta_reduce gamma l in 
       let r' = beta_reduce gamma' r in 
-      Forall (id, l', r')
+      let t' = Forall (id, l', r') in 
+      if alpha_equiv [] t' t then t' else beta_reduce gamma t'
     end
 
 (** [typecheck_context gamma delta] typechecks [delta] in context [gamma].
@@ -179,7 +185,7 @@ and typecheck_non_context gamma t =
 (** [typecheck_t t] returns [Type] if [t] is a valid context and otherwise
     returns the result of typechecking [t] in context [Type] *)
 and typecheck_t t =
-  if is_valid_context t then Type else
+  if is_valid_context t then (typecheck_context t |> ignore; Type) else
   typecheck_non_context Type t
 
 (** [interp_t t] performs beta reduction on [t] and returns the result *)
@@ -207,10 +213,8 @@ and typecheck_fun gamma x a t =
 (** [typecheck_forall gamma x a b] typechecks [Forall (x, a, b)] under context
     [gamma] and returns the result *)
 and typecheck_forall gamma x a b =
-  print_endline "in typecheck forall";
-  print_endline ("gamma: " ^ (pp_t gamma));
-  let gamma' = ins_context gamma x a in 
-  print_endline ("gamma': " ^ (pp_t gamma'));
+  let gamma' = ins_context gamma x a in
+  typecheck_context gamma' |> ignore;
   Type
 
 (** [typecheck_app gamma t1 t2] typechecks [App (t1, t2)] under context gamma
@@ -218,23 +222,11 @@ and typecheck_forall gamma x a b =
 and typecheck_app gamma t1 t2 =
   let t1_t = typecheck_non_context gamma t1 in
   let t2_t = typecheck_non_context gamma t2 in
-  print_endline "\nTYPECHECHING AN APPLICATION HERE\n";
   match t1_t with
   | Forall (x, a, b) ->
-      print_endline ("gamma: " ^ (pp_t gamma));
-      print_endline ("t1: " ^ (pp_t t1));
-      print_endline ("t2: " ^ (pp_t t2));
-      print_endline ("t1 typed: " ^ (pp_t t1_t));
-      print_endline ("t2 typed: " ^ (pp_t t2_t));
-      print_endline ("arg type : " ^ (pp_t a));
       if alpha_equiv [] t2_t a then subst_t x b t2
-      else (print_endline "naur 1"; raise (MalformedType ((pp_t a) ^ " and " ^ (pp_t t2_t))))
-  | e -> begin 
-    print_endline "naur 2";
-    print_endline ("t1: " ^ (pp_t t1));
-    print_endline ("t2: " ^ (pp_t t2));
-    raise (MalformedType ("wasn't even a forall " ^ (pp_t t1_t) ^ " and " ^ (pp_t t2_t) ))
-  end
+      else raise (MalformedType ((pp_t a) ^ " and " ^ (pp_t t2_t)))
+  | e -> raise (MalformedType ("wasn't even a forall " ^ (pp_t t1_t) ^ " and " ^ (pp_t t2_t) ))
 
 (** [typecheck_let id t p] typechecks [t] and then substitues it for [id]
     in program [p] and returns the resulting program *)
@@ -243,12 +235,24 @@ let rec typecheck_let id t p =
   let p_subst = subst_prog id p t_res in 
   typecheck_prog p_subst
 
+(** [typecheck_theorem theorem p] checks that the type of [theorem.proof]
+    is alpha equivalent to the beta reduction of [theorem.theorem]. 
+    If it is, then it substitutes the beta_reduction of the proof in for
+    theorem.id throughout the rest of the program [p]. Otherwise, it raises
+    [MalformedType] *)
 and typecheck_theorem theorem p =
-  failwith "unimplemented 3"
+  let {id; theorem; proof} = theorem in
+  typecheck_t theorem |> ignore;
+  let theorem' = interp_t theorem in
+  let proof' = typecheck_t proof in 
+  let proof_val = interp_t proof in 
+  if alpha_equiv [] theorem' proof' then
+    typecheck_prog (subst_prog id p proof_val) else
+  raise (MalformedType ("Invalid Proof:\n" ^ (pp_t theorem') ^ " and \n" ^ (pp_t proof')))
 
 (** [typecheck_prog prog] typechecks [prog] and returns the result *)
 and typecheck_prog prog =
   match prog with 
   | Let (id, t, p) -> typecheck_let id t p
   | Theorem (theorem, p) -> typecheck_theorem theorem p
-  | Expr t -> typecheck_t t
+  | Expr t -> typecheck_t t |> ignore; interp_t t

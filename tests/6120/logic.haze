@@ -3,10 +3,15 @@
 let True = forall I:Type, forall i:I, i in 
 let False = forall I:Type, I in
 
-
+(* Logical negation *)
+let not = forall A:Type, forall x:A, false in
 
 (* Logical conjunction *)
 let conj = lambda P:Type -> lambda Q:Type -> forall x:Type, forall _:(forall _:P, forall _:Q, x), x in
+(* Logical sum *)
+let sum = lambda P:Type -> lambda Q:Type -> forall x:Type, forall _:(forall _:P, x), forall _:(forall _:Q, x), x in
+(* Iff *)
+let iff = lambda P:Type -> lambda Q:Type -> ((conj (forall _:P, Q)) (forall _:Q, P)) in
 
 (* P -> P *)
 Theorem p_implies_p: forall P:Type, forall _:P, P.
@@ -18,17 +23,39 @@ Proof. lambda P:Type -> lambda Q:Type -> lambda x:P -> lambda _:Q -> x.
 
 (* P -> P /\ P *)
 Theorem p_implies_conj: forall P:Type, forall _:P, ((conj P) P).
-Proof. lambda P:Type -> lambda x:P -> 
+Proof. lambda P:Type -> lambda y:P -> lambda x:Type -> lambda evidence:(forall _:P, forall _:P, x) -> ((evidence y) y).
 
 (* P /\ Q -> P *)
 Theorem conj_implies_fst: forall P:Type, forall Q:Type, forall _:((conj P) Q), P.
 Proof. lambda P:Type -> lambda Q:Type -> lambda  p:((conj P) Q) -> ((p P) (lambda x:P -> lambda _:Q -> x)).
 
 (* P /\ Q -> Q *)
-Theorem cong_implies_snd: forall P:Type, forall Q:Type, forall _:((conj P) Q), Q.
+Theorem conj_implies_snd: forall P:Type, forall Q:Type, forall _:((conj P) Q), Q.
 Proof. lambda P:Type -> lambda Q:Type -> lambda  p:((conj P) Q) -> ((p Q) (lambda _:P -> lambda x:Q -> x)).
 
-(*Theorem p_implies_q_implies_conj: forall P:Type, forall Q:Type, forall p:P, forall q:Q, ((conj P) Q).
-Proof. lambda P:Type -> lambda Q:Type -> lambda _:P -> lambda _:Q -> ((conj P) Q).*)
+(* P -> Q -> P /\ Q *)
+Theorem p_implies_q_implies_conj: forall P:Type, forall Q:Type, 
+    forall p:P, forall q:Q, ((conj P) Q).
+Proof. lambda P:Type -> lambda Q:Type -> lambda a:P -> lambda b:Q -> 
+    lambda x:Type -> lambda evidence:(forall _:P, forall _:Q, x) -> ((evidence a) b).
+
+(* P /\ Q -> Q /\ P *)
+(* Note that substitution is broken, so we used A and B *)
+Theorem and_commute: forall A:Type, forall B:Type, forall _:((conj A) B), ((conj B) A).
+Proof. lambda A:Type -> lambda B:Type -> lambda  p:((conj A) B) -> lambda x:Type -> 
+    lambda evidence:(forall _:B, forall _:A, x) ->
+        ((evidence (((conj_implies_snd A) B) p)) (((conj_implies_fst A) B) p)).
+
+(* P -> P \/ Q *)
+Theorem p_implies_sum: forall P:Type, forall Q:Type, forall p:P, ((sum P) Q).
+Proof. lambda P:Type -> lambda Q:Type -> lambda p:P -> lambda x:Type -> 
+    lambda evidence:(forall _:P, x) -> lambda _:(forall _:Q, x) -> (evidence p).
+
+(* Q -> P \/ Q *)
+Theorem p_implies_sum: forall P:Type, forall Q:Type, forall q:Q, ((sum P) Q).
+Proof. lambda P:Type -> lambda Q:Type -> lambda q:Q -> lambda x:Type -> 
+    lambda _:(forall _:P, x) -> lambda evidence:(forall _:Q, x) -> (evidence q).
+
+
 
 True

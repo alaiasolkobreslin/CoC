@@ -1,0 +1,53 @@
+logic.haze
+
+Let: conj beta reduced: (fun P:Type -> (fun Q:Type -> (forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x))))
+
+Let: sum beta reduced: (fun P:Type -> (fun Q:Type -> (forall x:Type , (forall _:(forall _:P , x) , (forall _:(forall _:Q , x) , x)))))
+Theorem: p_implies_p beta reduced: (forall P:Type , (forall _:P , P))
+Proof typed: (forall P:Type , (forall x:P , P))
+Proof beta reduced: (fun P:Type -> (fun x:P -> x))
+
+
+Theorem: p_implies_q_implies_p beta reduced: (forall P:Type , (forall Q:Type , (forall _:P , (forall _:Q , P))))
+Proof typed: (forall P:Type , (forall Q:Type , (forall x:P , (forall _:Q , P))))
+Proof beta reduced: (fun P:Type -> (fun Q:Type -> (fun x:P -> (fun _:Q -> x))))
+
+
+Theorem: p_implies_conj beta reduced: (forall P:Type , (forall _:P , (forall x:Type , (forall _:(forall _:P , (forall _:P , x)) , x))))
+Proof typed: (forall P:Type , (forall y:P , (forall x:Type , (forall evidence:(forall _:P , (forall _:P , x)) , x))))
+Proof beta reduced: (fun P:Type -> (fun y:P -> (fun x:Type -> (fun evidence:(forall _:P , (forall _:P , x)) -> ((evidence y) y)))))
+
+
+Theorem: conj_implies_fst beta reduced: (forall P:Type , (forall Q:Type , (forall _:(forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x)) , P)))
+Proof typed: (forall P:Type , (forall Q:Type , (forall p:(forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x)) , P)))
+Proof beta reduced: (fun P:Type -> (fun Q:Type -> (fun p:(forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x)) -> ((p P) (fun x:P -> (fun _:Q -> x))))))
+
+
+Theorem: conj_implies_snd beta reduced: (forall P:Type , (forall Q:Type , (forall _:(forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x)) , Q)))
+Proof typed: (forall P:Type , (forall Q:Type , (forall p:(forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x)) , Q)))
+Proof beta reduced: (fun P:Type -> (fun Q:Type -> (fun p:(forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x)) -> ((p Q) (fun _:P -> (fun x:Q -> x))))))
+
+
+Theorem: p_implies_q_implies_conj beta reduced: (forall P:Type , (forall Q:Type , (forall p:P , (forall q:Q , (forall x:Type , (forall _:(forall _:P , (forall _:Q , x)) , x))))))
+Proof typed: (forall P:Type , (forall Q:Type , (forall a:P , (forall b:Q , (forall x:Type , (forall evidence:(forall _:P , (forall _:Q , x)) , x))))))
+Proof beta reduced: (fun P:Type -> (fun Q:Type -> (fun a:P -> (fun b:Q -> (fun x:Type -> (fun evidence:(forall _:P , (forall _:Q , x)) -> ((evidence a) b)))))))
+
+
+Theorem: and_commute beta reduced: (forall A:Type , (forall B:Type , (forall _:(forall x:Type , (forall _:(forall _:A , (forall _:B , x)) , x)) , (forall x:Type , (forall _:(forall _:B , (forall _:A , x)) , x)))))
+Proof typed: (forall A:Type , (forall B:Type , (forall p:(forall x:Type , (forall _:(forall _:A , (forall _:B , x)) , x)) , (forall x:Type , (forall evidence:(forall _:B , (forall _:A , x)) , x)))))
+Proof beta reduced: (fun A:Type -> (fun B:Type -> (fun p:(forall x:Type , (forall _:(forall _:A , (forall _:B , x)) , x)) -> (fun x:Type -> (fun evidence:(forall _:B , (forall _:A , x)) -> ((evidence ((p B) (fun _:A -> (fun x:B -> x)))) ((p A) (fun x:A -> (fun _:B -> x)))))))))
+
+
+Theorem: p_implies_sum beta reduced: (forall P:Type , (forall Q:Type , (forall p:P , (forall x:Type , (forall _:(forall _:P , x) , (forall _:(forall _:Q , x) , x))))))
+Proof typed: (forall P:Type , (forall Q:Type , (forall p:P , (forall x:Type , (forall evidence:(forall _:P , x) , (forall _:(forall _:Q , x) , x))))))
+Proof beta reduced: (fun P:Type -> (fun Q:Type -> (fun p:P -> (fun x:Type -> (fun evidence:(forall _:P , x) -> (fun _:(forall _:Q , x) -> (evidence p)))))))
+
+
+Theorem: q_implies_sum beta reduced: (forall P:Type , (forall Q:Type , (forall q:Q , (forall x:Type , (forall _:(forall _:P , x) , (forall _:(forall _:Q , x) , x))))))
+Proof typed: (forall P:Type , (forall Q:Type , (forall q:Q , (forall x:Type , (forall _:(forall _:P , x) , (forall evidence:(forall _:Q , x) , x))))))
+Proof beta reduced: (fun P:Type -> (fun Q:Type -> (fun q:Q -> (fun x:Type -> (fun _:(forall _:P , x) -> (fun evidence:(forall _:Q , x) -> (evidence q)))))))
+
+
+(fun P:Type -> (fun Q:Type -> (fun q:Q -> (fun x:Type -> (fun _:(forall _:P , x) -> (fun evidence:(forall _:Q , x) -> (evidence q)))))))
+Term typed: (forall P:Type , (forall Q:Type , (forall q:Q , (forall x:Type , (forall _:(forall _:P , x) , (forall evidence:(forall _:Q , x) , x))))))
+

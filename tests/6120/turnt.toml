@@ -1,0 +1,1 @@
+command = "../../_build/default/bin/main.exe --typecheck {filename}"

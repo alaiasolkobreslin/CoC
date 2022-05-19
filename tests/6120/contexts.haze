@@ -1,0 +1,5 @@
+
+let ctx1 = forall X:Type, forall X:Type, forall z:(forall _:X, Type), Type in
+let ctx2 = forall X:Type, forall x:X, forall y:(forall _:X, forall _:X, Type), Type in
+
+ctx1

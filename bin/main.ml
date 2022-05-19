@@ -58,19 +58,19 @@ let typecheck_channel write_out in_channel out_channel file_name =
   try
     let lexbuf = from_channel in_channel in
     let ast = startprog token lexbuf in 
-    let prog_type = typecheck_prog ast in
-    let fmt = Format.formatter_of_out_channel out_channel in
+    let prints = typecheck_prog ast [] in
+    (* let fmt = Format.formatter_of_out_channel out_channel in *)
+    let out_fmt = Format.formatter_of_out_channel stdout in
+    let str = List.fold_left (fun acc e -> e ^ "\n" ^ acc) "" prints in
     if write_out then
       begin
-        prog_type
-        |> pp_t
-        |> Format.pp_print_string fmt;
-        Format.pp_force_newline fmt ();
-        Format.pp_print_flush fmt ();
-        print_endline (pp_t prog_type);
-        Some prog_type
+        str
+        |> Format.pp_print_string out_fmt;
+        Format.pp_force_newline out_fmt ();
+        Format.pp_print_flush out_fmt ();
+        Some str
       end
-    else Some prog_type
+    else Some str
   with
   | LexingError (p, msg) ->
     report_lex_error file_name out_channel p msg; None

@@ -1,0 +1,36 @@
+arith.haze
+
+Let: Nat beta reduced: (forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N)))
+
+Let: zero beta reduced: (fun N:Type -> (fun x:N -> (fun _:(forall _:N , N) -> x)))
+
+Let: one beta reduced: (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f x))))
+
+Let: two beta reduced: (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f (f x)))))
+
+Let: succ beta reduced: (fun nat:(forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N))) -> (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f (((nat N) x) f))))))
+
+Let: add beta reduced: (fun n1:(forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N))) -> (fun n2:(forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N))) -> (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (((n1 N) (((n2 N) x) f)) f))))))
+Theorem: zero_is_nat beta reduced: (forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N)))
+Proof typed: (forall N:Type , (forall x:N , (forall _:(forall _:N , N) , N)))
+Proof beta reduced: (fun N:Type -> (fun x:N -> (fun _:(forall _:N , N) -> x)))
+
+
+Theorem: one_is_nat beta reduced: (forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N)))
+Proof typed: (forall N:Type , (forall x:N , (forall f:(forall _:N , N) , N)))
+Proof beta reduced: (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f x))))
+
+
+Theorem: two_is_nat beta reduced: (forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N)))
+Proof typed: (forall N:Type , (forall x:N , (forall f:(forall _:N , N) , N)))
+Proof beta reduced: (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f (f x)))))
+
+
+Theorem: succ_zero_is_nat beta reduced: (forall N:Type , (forall _:N , (forall _:(forall _:N , N) , N)))
+Proof typed: (forall N:Type , (forall x:N , (forall f:(forall _:N , N) , N)))
+Proof beta reduced: (fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f x))))
+
+
+(fun N:Type -> (fun x:N -> (fun f:(forall _:N , N) -> (f (f x)))))
+Term typed: (forall N:Type , (forall x:N , (forall f:(forall _:N , N) , N)))
+

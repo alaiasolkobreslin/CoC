@@ -1,0 +1,8 @@
+contexts.haze
+
+Let: ctx1 beta reduced: (forall X:Type , (forall X:Type , (forall z:(forall _:X , Type) , Type)))
+
+Let: ctx2 beta reduced: (forall X:Type , (forall x:X , (forall y:(forall _:X , (forall _:X , Type)) , Type)))
+(forall X:Type , (forall X:Type , (forall z:(forall _:X , Type) , Type)))
+Term typed: Type
+

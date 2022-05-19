@@ -1,8 +1,0 @@
-let id = (lambda x:Type -> x) in
-
-Theorem. theorem1: (forall x:Type, x). Proof.
-(lambda x:Type -> x).
-
-let idApply = (y y) in 
-
-(lambda y:(lambda x:Type -> Type) -> y)

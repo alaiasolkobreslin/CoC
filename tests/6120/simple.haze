@@ -1,0 +1,4 @@
+
+let f = lambda P:Type -> lambda Q:Type -> lambda g:P -> g in
+
+((f Type) Type)

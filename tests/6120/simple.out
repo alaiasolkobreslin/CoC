@@ -1,0 +1,6 @@
+simple.haze
+
+Let: f beta reduced: (fun P:Type -> (fun Q:Type -> (fun g:P -> g)))
+(fun g:Type -> g)
+Term typed: (forall g:Type , Type)
+

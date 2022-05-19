@@ -1,5 +1,4 @@
 open Ast
-open Util
 
 exception MalformedType of string
 exception InvalidApplication of string
@@ -196,7 +195,6 @@ and interp_t t = beta_reduce Type t
 and typecheck_t_with_context gamma t =
   match t with
   | Id x -> lookup_context gamma x None
-  (* | Id x -> get_real_ctx_value gamma t *)
   | Fun (x, a, t) -> typecheck_fun gamma x a t
   | App (t1, t2) -> typecheck_app gamma t1 t2
   | Forall (x, a, b) -> typecheck_forall gamma x a b
@@ -230,29 +228,40 @@ and typecheck_app gamma t1 t2 =
 
 (** [typecheck_let id t p] typechecks [t] and then substitues it for [id]
     in program [p] and returns the resulting program *)
-let rec typecheck_let id t p =
+let rec typecheck_let id t p prints =
   let t_res = interp_t t in
   let p_subst = subst_prog id p t_res in 
-  typecheck_prog p_subst
+  let print' = "\nLet: " ^ id ^ " beta reduced: " ^ (pp_t t_res) in
+  typecheck_prog p_subst (print'::prints)
 
 (** [typecheck_theorem theorem p] checks that the type of [theorem.proof]
     is alpha equivalent to the beta reduction of [theorem.theorem]. 
     If it is, then it substitutes the beta_reduction of the proof in for
     theorem.id throughout the rest of the program [p]. Otherwise, it raises
     [MalformedType] *)
-and typecheck_theorem theorem p =
+and typecheck_theorem theorem p prints =
   let {id; theorem; proof} = theorem in
   typecheck_t theorem |> ignore;
   let theorem' = interp_t theorem in
   let proof' = typecheck_t proof in 
-  let proof_val = interp_t proof in 
+  let proof_val = interp_t proof in
+  let theorem_print = "Theorem: " ^ id ^ " beta reduced: " ^ (pp_t theorem') in 
+  let proof_print_t = "Proof typed: " ^ (pp_t proof') in
+  let proof_print_b = "Proof beta reduced: " ^ (pp_t proof_val) in
   if alpha_equiv [] theorem' proof' then
-    typecheck_prog (subst_prog id p proof_val) else
+    typecheck_prog (subst_prog id p proof_val) 
+      ("\n"::proof_print_b::proof_print_t::theorem_print::prints) else
   raise (MalformedType ("Invalid Proof:\n" ^ (pp_t theorem') ^ " and \n" ^ (pp_t proof')))
 
 (** [typecheck_prog prog] typechecks [prog] and returns the result *)
-and typecheck_prog prog =
+and typecheck_prog prog prints =
   match prog with 
-  | Let (id, t, p) -> typecheck_let id t p
-  | Theorem (theorem, p) -> typecheck_theorem theorem p
-  | Expr t -> typecheck_t t |> ignore; interp_t t
+  | Let (id, t, p) -> typecheck_let id t p prints
+  | Theorem (theorem, p) -> typecheck_theorem theorem p prints
+  | Expr t -> 
+    begin
+      let print_t = "Term typed: " ^ (pp_t (typecheck_t t)) in
+      let print_i = interp_t t |> pp_t in
+      let prints' = print_t::print_i::prints in 
+      prints'
+    end
